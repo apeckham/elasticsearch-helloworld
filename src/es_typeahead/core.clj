@@ -16,6 +16,13 @@
        (s/request (s/client))
        pprint))
 
+(defn count []
+  (->> {:url "/blog/user/_count"
+        :method :post}
+       (s/request (s/client))
+       :body
+       :count))
+
 (doall (map index (take 100 (names)) (range)))
 
 (->> {:url "/blog/user/_search"
