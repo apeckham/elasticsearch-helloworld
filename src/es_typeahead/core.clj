@@ -9,9 +9,10 @@
   (println "Hello, asdf World!"))
 
 (defn index [name id]
-  (->> {:url (str "/blog/user/" id)
+  (->> {:url "/blog/user"
         :method :put
-        :body {:name name}
+        :body {:_id id
+               :name name}
         :headers {:content-type "application/json"}}
        (s/request (s/client))
        pprint))
@@ -23,7 +24,7 @@
        :body
        :count))
 
-(doall (map index (take 100 (names)) (range)))
+(doall (map index (take 10 (names)) (range)))
 
 (->> {:url "/blog/user/_search"
       :method :get
