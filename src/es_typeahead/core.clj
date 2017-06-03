@@ -1,5 +1,6 @@
 (ns es-typeahead.core
-  (:require [qbits.spandex :as s])
+  (:require [qbits.spandex :as s]
+            [faker.name :refer [names]])
   (:gen-class))
 
 (defn -main
@@ -9,9 +10,10 @@
 
 (->> {:url "/blog/user/dilbert"
       :method :put
-      :body {:name "Dilbert Brown"}
+      :body {:name (first (names))}
       :headers {:content-type "application/json"}}
-     (s/request (s/client)))
+     (s/request (s/client))
+     pprint)
 
 (->> {:url "/blog/user/_search"
       :method :get
