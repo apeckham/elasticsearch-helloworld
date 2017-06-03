@@ -8,12 +8,15 @@
   [& args]
   (println "Hello, asdf World!"))
 
-(->> {:url "/blog/user/dilbert"
-      :method :put
-      :body {:name (first (names))}
-      :headers {:content-type "application/json"}}
-     (s/request (s/client))
-     pprint)
+(defn index [name id]
+  (->> {:url (str "/blog/user/" id)
+        :method :put
+        :body {:name name}
+        :headers {:content-type "application/json"}}
+       (s/request (s/client))
+       pprint))
+
+(doall (map index (take 100 (names)) (range)))
 
 (->> {:url "/blog/user/_search"
       :method :get
@@ -23,4 +26,5 @@
      :body
      :hits
      :hits
+     (map :_source)
      pprint)
