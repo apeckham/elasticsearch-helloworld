@@ -62,7 +62,7 @@
                          {:additional "payload2"
                           :suggest {:input name}}])]
 
-           (async/put! input-ch (mapcat action (take 10000 (names))))
+           (async/put! input-ch (mapcat action (take 100000 (names))))
            (async/close! input-ch)
            (loop []
              (when-let [[job response] (async/<!! output-ch)]
@@ -79,9 +79,11 @@
               (map :_source))
 
          (defn suggest [prefix]
-           (->> {:suggest {:song-suggest {:prefix prefix
-                                          :completion {:field "suggest"
-                                                       :size 20}}}}
+           (->> {:suggest
+                 {:song-suggest
+                  {:prefix prefix
+                   :completion {:field "suggest"
+                                :size 20}}}}
                 (req "/music/_search" :post)
                 :suggest
                 :song-suggest
@@ -89,6 +91,6 @@
                 :options
                 (map :_source)))
 
-         (suggest "a")
+         (suggest "aaron")
 
          )
