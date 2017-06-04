@@ -80,13 +80,13 @@
                                      {:input song}}))
 
          (let [{:keys [input-ch output-ch]} (s/bulk-chan client)
-               action (fn [name]
-                        [{:index {:_index "music" :_type "song"}}
-                         {:additional "payload2" :suggest {:input name}}])]
+               bulk-lines (fn [name]
+                            [{:index {:_index "music" :_type "song"}}
+                             {:additional "payload2" :suggest {:input name}}])]
 
-           (doseq [line (mapcat action (take 100000 (names)))]
-             (async/>!! input-ch line)
-             (async/close! input-ch))
+           (doseq [lines (map bulk-lines (take 100000 (names)))]
+             (async/>!! input-ch lines))
+           (async/close! input-ch)
            (loop []
              (when-let [[job response] (async/<!! output-ch)]
                (if (-> response :body :errors)
