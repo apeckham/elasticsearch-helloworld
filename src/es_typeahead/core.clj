@@ -30,12 +30,17 @@
        (map :_source)
        pprint))
 
-(comment
-  (doall (map index (take 10 (names))))
 
-  (count)
+(comment "easy indexing"
+         (doall (map index (take 10 (names))))
 
-  (match-all)
+         (count)
+
+         (match-all)
+
+         )
+
+(comment "completion suggester"
 
   (req "/music" :put {:mappings
                       {:song
@@ -55,7 +60,7 @@
 
   (->> {:suggest
         {:song-suggest
-         {:prefix "W"
+         {:prefix "F"
           :completion {:field "suggest"}}}}
        (req "/music/_search" :post)
        :suggest
