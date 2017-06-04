@@ -10,8 +10,10 @@
                  [com.amazonaws/aws-java-sdk-core "1.11.138"]]
   :jvm-opts ["-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.SimpleLog"
              "-Dorg.apache.commons.logging.simplelog.showdatetime=true"
-             "-Dorg.apache.commons.logging.simplelog.log.org.apache.http=DEBUG"
-             "-Dorg.apache.commons.logging.simplelog.log.org.apache.http.wire=ERROR"]
+             "-Dorg.apache.commons.logging.simplelog.log.org.apache.http.impl.conn=DEBUG"
+             "-Dorg.apache.commons.logging.simplelog.log.org.apache.http.impl.client=DEBUG"
+             "-Dorg.apache.commons.logging.simplelog.log.org.apache.http.client=DEBUG"
+             "-Dorg.apache.commons.logging.simplelog.log.org.apache.http.wire=DEBUG"]
   :main ^:skip-aot es-typeahead.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

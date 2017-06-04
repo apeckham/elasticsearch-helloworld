@@ -84,7 +84,8 @@
                         [{:index {:_index "music" :_type "song"}}
                          {:additional "payload2" :suggest {:input name}}])]
 
-           (async/put! input-ch (mapcat action (take 10000 (names))))
+           (doseq [line (mapcat action (take 100000 (names)))]
+                  (async/put! input-ch line))
            (async/close! input-ch)
            (loop []
              (when-let [[job response] (async/<!! output-ch)]
