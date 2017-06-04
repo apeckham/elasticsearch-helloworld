@@ -79,10 +79,9 @@
               (map :_source))
 
          (defn suggest [prefix]
-           (->> {:suggest
-                 {:song-suggest
-                  {:prefix prefix
-                   :completion {:field "suggest"}}}}
+           (->> {:suggest {:song-suggest {:prefix prefix
+                                          :completion {:field "suggest"
+                                                       :size 20}}}}
                 (req "/music/_search" :post)
                 :suggest
                 :song-suggest
@@ -90,7 +89,6 @@
                 :options
                 (map :_source)))
 
-         (suggest "A")
-
+         (suggest "a")
 
          )
