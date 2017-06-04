@@ -10,6 +10,14 @@
            org.apache.http.impl.nio.client.HttpAsyncClientBuilder
            [vc.inreach.aws.request AWSSigner AWSSigningRequestInterceptor]))
 
+;; (.setLevel (java.util.logging.Logger/getLogger "org.apache.http.wire") java.util.logging.Level/FINEST)
+;; (.setLevel (java.util.logging.Logger/getLogger "org.apache.http.headers") java.util.logging.Level/FINEST)
+;; (System/setProperty "org.apache.commons.logging.Log" "org.apache.commons.logging.impl.SimpleLog")
+;; (System/setProperty "org.apache.commons.logging.simplelog.showdatetime" "true")
+;; (System/setProperty "org.apache.commons.logging.simplelog.log.httpclient.wire" "debug")
+;; (System/setProperty "org.apache.commons.logging.simplelog.log.org.apache.http" "debug")
+;; (System/setProperty "org.apache.commons.logging.simplelog.log.org.apache.http.headers" "debug")
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
@@ -29,19 +37,22 @@
 (def client (s/client {:hosts ["https://search-test-knkhdacrx5az5rzjsmmjip3ove.us-east-1.es.amazonaws.com"]
                        :http-client {:aws-signing-request-interceptor {:service "es" :region "us-east-1"}}}))
 
-(defn req [url method body]
-  (->> {:url url
-        :method method
-        :body body
-        :headers {:content-type "application/json"}}
-       (s/request client)
-       :body))
+(defn req
+  ([url method]
+   (req url method nil))
+  ([url method body]
+           (->> {:url url
+                 :method method
+                 :body body
+                 :headers {:content-type "application/json"}}
+                (s/request client)
+                :body)))
 
 (defn index [name]
   (pprint (req "/blog/user" :post {:name name})))
 
 (defn count []
-  (:count (req "/blog/user/_count" :post nil)))
+  (:count (req "/blog/user/_count" :post)))
 
 (defn match-all []
   (->> {:query {:match_all {}}}
@@ -50,6 +61,9 @@
        :hits
        (map :_source)
        pprint))
+
+(defn indices []
+  (println (req "/_cat/indices" :get)))
 
 (comment "easy indexing"
          (doall (map index (take 10 (names))))
@@ -60,7 +74,7 @@
 
 (comment "completion suggester"
 
-         (req "/music" :delete nil)
+         (req "/music" :delete)
 
          (req "/music" :put {:mappings
                              {:song
@@ -75,10 +89,8 @@
 
          (let [{:keys [input-ch output-ch]} (s/bulk-chan client)
                action (fn [name]
-                        [{:index {:_index "music"
-                                  :_type "song"}}
-                         {:additional "payload2"
-                          :suggest {:input name}}])]
+                        [{:index {:_index "music" :_type "song"}}
+                         {:additional "payload2" :suggest {:input name}}])]
 
            (async/put! input-ch (mapcat action (take 10000 (names))))
            (async/close! input-ch)
