@@ -1,15 +1,33 @@
 (ns es-typeahead.core
   (:gen-class)
   (:require [clojure.core.async :as async]
+            [clojure.pprint :refer [pprint]]
             [faker.name :refer [names]]
-            [qbits.spandex :as s]))
+            [qbits.spandex :as s])
+  (:import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+           com.google.common.base.Supplier
+           [java.time LocalDateTime ZoneOffset]
+           org.apache.http.impl.nio.client.HttpAsyncClientBuilder
+           [vc.inreach.aws.request AWSSigner AWSSigningRequestInterceptor]))
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
   (println "Hello, asdf World!"))
 
-(def client (s/client))
+(def clock-supplier
+  (reify Supplier
+    (get [this]
+      (LocalDateTime/now ZoneOffset/UTC))))
+
+(defmethod qbits.spandex.client-options/set-http-client-option!
+  :aws-signing-request-interceptor [_ ^HttpAsyncClientBuilder builder {:keys [service region]}]
+  (.addInterceptorLast builder (-> (DefaultAWSCredentialsProviderChain.)
+                                   (AWSSigner. region service clock-supplier)
+                                   AWSSigningRequestInterceptor.)))
+
+(def client (s/client {:hosts ["https://search-test-knkhdacrx5az5rzjsmmjip3ove.us-east-1.es.amazonaws.com"]
+                       :http-client {:aws-signing-request-interceptor {:service "es" :region "us-east-1"}}}))
 
 (defn req [url method body]
   (->> {:url url
@@ -91,6 +109,4 @@
                 :options
                 (map :_source)))
 
-         (suggest "aaron")
-
-         )
+         (suggest "aaron"))
