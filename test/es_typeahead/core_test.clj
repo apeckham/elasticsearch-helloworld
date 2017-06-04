@@ -1,6 +1,8 @@
 (ns es-typeahead.core-test
   (:require [cheshire.core :as json]
-            [clojure.test :refer :all]
+            [clojure
+             [test :refer :all]
+             [walk :refer [keywordize-keys]]]
             [org.httpkit.client :as http]
             [qbits.spandex :as s])
   (:import com.github.tomakehurst.wiremock.core.WireMockConfiguration
@@ -17,27 +19,49 @@
                       (.resetAll server)
                       (f)))
 
+(defn admin-url [path]
+  (format "http://localhost:%d/__admin%s" (.port server) path))
+
+(defn admin-request [method path body]
+  (->> (http/request {:method method
+                      :url (admin-url path)
+                      :body (json/generate-string body)})
+       deref
+       :body
+       json/parse-string
+       keywordize-keys))
+
+(defn new-mapping [mapping]
+  (admin-request :post "/mappings/new" mapping))
+
+(defn find-requests [body]
+  (admin-request :post "/requests/find" body))
+
+(defn unmatched-requests []
+  (admin-request :get "/requests/unmatched" nil))
+
+(defn count-requests [body]
+  (:count (admin-request :post "/requests/count" body)))
+
 (deftest a-test
-  (testing "FIXME, I fail."
-    @(http/post (str "http://localhost:" (.port server) "/__admin/mappings/new")
-                {:body (json/generate-string {:request {:method "GET" :url "/hello"}
-                                              :response {:status 200
-                                                         :body "{ \"message\": \"Hello World\" }"
-                                                         :headers {:Content-Type "application/json"}}})})
-    (let [response @(http/get (str "http://localhost:" (.port server) "/hello"))]
+  (testing "hello wiremock"
+    (new-mapping {:request {:method "GET" :url "/hello"}
+                  :response {:status 200
+                             :body "{\"message\": \"Hello World\"}"
+                             :headers {:Content-Type "application/json"}}})
+    (let [response @(http/get (format "http://localhost:%d/hello" (.port server)))]
       (is (= {"message" "Hello World"} (json/parse-string (:body response))))))
 
   (testing "spandex request"
-    @(http/post (str "http://localhost:" (.port server) "/__admin/mappings/new")
-                {:body (json/generate-string {:request {:method "POST" :url "/blog/user"}
-                                              :response {:status 200
-                                                         :body "{}"
-                                                         :headers {:Content-Type "application/json"}}})})
+    (new-mapping {:request {:method "POST" :url "/blog/user"}
+                  :response {:status 200
+                             :body "{}"
+                             :headers {:Content-Type "application/json"}}})
     (let [client (s/client {:hosts [(str "http://localhost:" (.port server))]})]
       (s/request client {:url "/blog/user"
                          :method :post
                          :body {:name "hello"}
                          :headers {:content-type "application/json"}}))
-    (is (not (= nil (json/parse-string (:body
-                                        @(http/post (str "http://localhost:" (.port server) "/__admin/requests/find")
-                                                    {:body (json/generate-string {:method "POST" :url "/blog/user"})}))))))))
+    (is (= ["/blog/user"] (map :url (:requests (find-requests {:method "POST"})))))
+    (is (= 1 (count-requests {:method "POST"})))
+    (is (empty? (:requests (unmatched-requests))))))
