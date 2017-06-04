@@ -8,7 +8,9 @@
                  [faker "0.2.2"]
                  [vc.inreach.aws/aws-signing-request-interceptor "0.0.16"]
                  [com.github.tomakehurst/wiremock "2.6.0"]
+                 [http-kit "2.2.0"]
                  [com.amazonaws/aws-java-sdk-core "1.11.138"]]
+  :plugins [[com.jakemccrary/lein-test-refresh "0.20.0"]]
   :jvm-opts ["-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.SimpleLog"
              "-Dorg.apache.commons.logging.simplelog.showdatetime=true"
              "-Dorg.apache.commons.logging.simplelog.log.org.apache.http.impl.conn=DEBUG"
