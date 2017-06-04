@@ -10,14 +10,6 @@
            org.apache.http.impl.nio.client.HttpAsyncClientBuilder
            [vc.inreach.aws.request AWSSigner AWSSigningRequestInterceptor]))
 
-;; (.setLevel (java.util.logging.Logger/getLogger "org.apache.http.wire") java.util.logging.Level/FINEST)
-;; (.setLevel (java.util.logging.Logger/getLogger "org.apache.http.headers") java.util.logging.Level/FINEST)
-;; (System/setProperty "org.apache.commons.logging.Log" "org.apache.commons.logging.impl.SimpleLog")
-;; (System/setProperty "org.apache.commons.logging.simplelog.showdatetime" "true")
-;; (System/setProperty "org.apache.commons.logging.simplelog.log.httpclient.wire" "debug")
-;; (System/setProperty "org.apache.commons.logging.simplelog.log.org.apache.http" "debug")
-;; (System/setProperty "org.apache.commons.logging.simplelog.log.org.apache.http.headers" "debug")
-
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
