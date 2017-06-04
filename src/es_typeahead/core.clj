@@ -33,12 +33,12 @@
   ([url method]
    (req url method nil))
   ([url method body]
-           (->> {:url url
-                 :method method
-                 :body body
-                 :headers {:content-type "application/json"}}
-                (s/request client)
-                :body)))
+   (->> {:url url
+         :method method
+         :body body
+         :headers {:content-type "application/json"}}
+        (s/request client)
+        :body)))
 
 (defn index [name]
   (pprint (req "/blog/user" :post {:name name})))
@@ -85,8 +85,8 @@
                          {:additional "payload2" :suggest {:input name}}])]
 
            (doseq [line (mapcat action (take 100000 (names)))]
-                  (async/put! input-ch line))
-           (async/close! input-ch)
+             (async/>!! input-ch line)
+             (async/close! input-ch))
            (loop []
              (when-let [[job response] (async/<!! output-ch)]
                (if (-> response :body :errors)
