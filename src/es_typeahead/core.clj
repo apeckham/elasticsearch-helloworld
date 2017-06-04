@@ -44,6 +44,8 @@
 
 (comment "completion suggester"
 
+  (req "/music" :delete nil)
+
   (req "/music" :put {:mappings
                       {:song
                        {:properties
@@ -51,8 +53,11 @@
                          :title {:type "keyword"}}}}})
 
   (doseq [song (take 1000 (names))]
-    (req "/music/song" :post {:suggest
+    (req "/music/song" :post {:additional "payload"
+                              :suggest
                               {:input song}}))
+
+  (:count (req "/music/song/_count" :post nil))
 
   (->> {:query {:match_all {}}}
        (req "/music/_search" :post)
@@ -70,7 +75,7 @@
          :song-suggest
          first
          :options
-         (map (comp :input :suggest :_source))))
+         (map :_source)))
 
   (suggest "A")
 
