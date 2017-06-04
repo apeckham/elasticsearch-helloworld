@@ -60,8 +60,12 @@
     (let [client (s/client {:hosts [(str "http://localhost:" (.port server))]})]
       (s/request client {:url "/blog/user"
                          :method :post
+                         :body {:name "world"}
+                         :headers {:content-type "application/json"}})
+      (s/request client {:url "/blog/user"
+                         :method :post
                          :body {:name "hello"}
                          :headers {:content-type "application/json"}}))
-    (is (= ["/blog/user"] (map :url (:requests (find-requests {:method "POST"})))))
-    (is (= 1 (count-requests {:method "POST"})))
+    (is (= ["/blog/user" "/blog/user"] (map :url (:requests (find-requests {:method "POST"})))))
+    (is (= 2 (count-requests {:method "POST"})))
     (is (empty? (:requests (unmatched-requests))))))
