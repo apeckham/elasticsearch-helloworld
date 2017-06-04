@@ -7,6 +7,7 @@
                  [cc.qbits/spandex "0.3.11"]
                  [faker "0.2.2"]
                  [vc.inreach.aws/aws-signing-request-interceptor "0.0.16"]
+                 [com.github.tomakehurst/wiremock "2.6.0"]
                  [com.amazonaws/aws-java-sdk-core "1.11.138"]]
   :jvm-opts ["-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.SimpleLog"
              "-Dorg.apache.commons.logging.simplelog.showdatetime=true"

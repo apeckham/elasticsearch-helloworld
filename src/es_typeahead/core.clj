@@ -64,6 +64,10 @@
 
          (match-all))
 
+(defn bulk-lines [name]
+  [{:index {:_index "music" :_type "song"}}
+   {:additional "payload2" :suggest {:input name}}])
+
 (comment "completion suggester"
 
          (req "/music" :delete)
@@ -74,24 +78,11 @@
                                {:suggest {:type "completion"}
                                 :title {:type "keyword"}}}}})
 
-         (doseq [song (take 1000 (names))]
-           (req "/music/song" :post {:additional "payload"
-                                     :suggest
-                                     {:input song}}))
-
-         (let [{:keys [input-ch output-ch]} (s/bulk-chan client)
-               bulk-lines (fn [name]
-                            [{:index {:_index "music" :_type "song"}}
-                             {:additional "payload2" :suggest {:input name}}])]
-
-           (doseq [lines (map bulk-lines (take 100000 (names)))]
-             (async/>!! input-ch lines))
-           (async/close! input-ch)
-           (loop []
-             (when-let [[job response] (async/<!! output-ch)]
-               (if (-> response :body :errors)
-                 (throw (Exception. "Bulk index failed")))
-               (recur))))
+         (time (doseq [part (partition-all 300 (mapcat bulk-lines (take 300000 (names))))]
+                 (s/request client {:url "/_bulk"
+                                    :method :put
+                                    :body (s/chunks->body part)
+                                    :headers {:content-type "application/x-ndjson"}})))
 
          (:count (req "/music/song/_count" :post nil))
 
@@ -114,4 +105,30 @@
                 :options
                 (map :_source)))
 
-         (suggest "aaron"))
+         (suggest "aaron")
+
+         )
+
+(comment "index one doc at a time"
+         (doseq [song (take 1000 (names))]
+           (req "/music/song" :post {:additional "payload"
+                                     :suggest
+                                     {:input song}})))
+
+(comment "bulk-chan indexing. blocks after first request, not sure why"
+         (let [{:keys [input-ch output-ch]} (s/bulk-chan client {:max-concurrent-requests 1})
+               bulk-lines (fn [name]
+                            [{:index {:_index "music" :_type "song"}}
+                             {:additional "payload2" :suggest {:input name}}])]
+           (future
+             (prn "started")
+             (loop []
+               (prn (async/<!! (second output-ch)))))
+           (doseq [lines (map bulk-lines (take 1000 (names)))]
+             (async/>!! input-ch lines))
+           (async/close! input-ch)
+           #_(loop []
+               (when-let [[job response] (async/<!! output-ch)]
+                 (if (-> response :body :errors)
+                   (throw (Exception. "Bulk index failed")))
+                 (recur)))))
