@@ -37,4 +37,30 @@
 
   (match-all)
 
+  (req "/music" :put {:mappings
+                      {:song
+                       {:properties
+                        {:suggest {:type "completion"}
+                         :title {:type "keyword"}}}}})
+
+  (doseq [song (take 100 (names))]
+    (req "/music/song" :post {:suggest
+                              {:input song}}))
+
+  (->> {:query {:match_all {}}}
+       (req "/music/_search" :post)
+       :hits
+       :hits
+       (map :_source))
+
+  (->> {:suggest
+        {:song-suggest
+         {:prefix "W"
+          :completion {:field "suggest"}}}}
+       (req "/music/_search" :post)
+       :suggest
+       :song-suggest
+       (map :options))
+
+
   )
