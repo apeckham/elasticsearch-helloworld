@@ -20,44 +20,44 @@
                       (.resetAll server)
                       (f)))
 
-(defn admin-url [path]
+(defn admin-url [server path]
   (format "http://localhost:%d/__admin%s" (.port server) path))
 
-(defn admin-request [method path body]
+(defn admin-request [server method path body]
   (->> (http/request {:method method
-                      :url (admin-url path)
+                      :url (admin-url server path)
                       :body (json/generate-string body)})
        deref
        :body
        json/parse-string
        keywordize-keys))
 
-(defn new-mapping [mapping]
-  (admin-request :post "/mappings/new" mapping))
+(defn new-mapping [server mapping]
+  (admin-request server :post "/mappings/new" mapping))
 
-(defn find-requests [body]
-  (admin-request :post "/requests/find" body))
+(defn find-requests [server body]
+  (admin-request server :post "/requests/find" body))
 
-(defn unmatched-requests []
-  (admin-request :get "/requests/unmatched" nil))
+(defn unmatched-requests [server]
+  (admin-request server :get "/requests/unmatched" nil))
 
-(defn count-requests [body]
-  (:count (admin-request :post "/requests/count" body)))
+(defn count-requests [server body]
+  (:count (admin-request server :post "/requests/count" body)))
 
 (deftest a-test
   (testing "hello wiremock"
-    (new-mapping {:request {:method "GET" :url "/hello"}
-                  :response {:status 200
-                             :body "{\"message\": \"Hello World\"}"
-                             :headers {:Content-Type "application/json"}}})
+    (new-mapping server {:request {:method "GET" :url "/hello"}
+                         :response {:status 200
+                                    :body "{\"message\": \"Hello World\"}"
+                                    :headers {:Content-Type "application/json"}}})
     (let [response @(http/get (format "http://localhost:%d/hello" (.port server)))]
       (is (= {"message" "Hello World"} (json/parse-string (:body response))))))
 
   (testing "spandex request"
-    (new-mapping {:request {:method "POST" :url "/blog/user"}
-                  :response {:status 200
-                             :body "{}"
-                             :headers {:Content-Type "application/json"}}})
+    (new-mapping server {:request {:method "POST" :url "/blog/user"}
+                         :response {:status 200
+                                    :body "{}"
+                                    :headers {:Content-Type "application/json"}}})
     (let [client (s/client {:hosts [(str "http://localhost:" (.port server))]})]
       (s/request client {:url "/blog/user"
                          :method :post
@@ -67,6 +67,6 @@
                          :method :post
                          :body {:name "hello"}
                          :headers {:content-type "application/json"}}))
-    (is (= ["/blog/user" "/blog/user"] (map :url (:requests (find-requests {:method "POST"})))))
-    (is (= 2 (count-requests {:method "POST"})))
-    (is (empty? (:requests (unmatched-requests))))))
+    (is (= ["/blog/user" "/blog/user"] (map :url (:requests (find-requests server {:method "POST"})))))
+    (is (= 2 (count-requests server {:method "POST"})))
+    (is (empty? (:requests (unmatched-requests server))))))
