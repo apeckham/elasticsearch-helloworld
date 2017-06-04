@@ -8,12 +8,14 @@
   [& args]
   (println "Hello, asdf World!"))
 
+(def client (s/client))
+
 (defn req [url method body]
   (->> {:url url
         :method method
         :body body
         :headers {:content-type "application/json"}}
-       (s/request (s/client))
+       (s/request client)
        :body))
 
 (defn index [name]
@@ -48,7 +50,7 @@
                         {:suggest {:type "completion"}
                          :title {:type "keyword"}}}}})
 
-  (doseq [song (take 100 (names))]
+  (doseq [song (take 1000 (names))]
     (req "/music/song" :post {:suggest
                               {:input song}}))
 
@@ -58,14 +60,18 @@
        :hits
        (map :_source))
 
-  (->> {:suggest
-        {:song-suggest
-         {:prefix "F"
-          :completion {:field "suggest"}}}}
-       (req "/music/_search" :post)
-       :suggest
-       :song-suggest
-       (map :options))
+  (defn suggest [prefix]
+    (->> {:suggest
+          {:song-suggest
+           {:prefix prefix
+            :completion {:field "suggest"}}}}
+         (req "/music/_search" :post)
+         :suggest
+         :song-suggest
+         first
+         :options
+         (map (comp :input :suggest :_source))))
 
+  (suggest "A")
 
   )
