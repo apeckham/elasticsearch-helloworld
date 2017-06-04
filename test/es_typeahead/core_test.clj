@@ -1,7 +1,8 @@
 (ns es-typeahead.core-test
-  (:require [clojure.test :refer :all]
-            [cheshire.core :as json]
-            [org.httpkit.client :as http])
+  (:require [cheshire.core :as json]
+            [clojure.test :refer :all]
+            [org.httpkit.client :as http]
+            [qbits.spandex :as s])
   (:import com.github.tomakehurst.wiremock.core.WireMockConfiguration
            com.github.tomakehurst.wiremock.WireMockServer))
 
@@ -19,17 +20,24 @@
 (deftest a-test
   (testing "FIXME, I fail."
     @(http/post (str "http://localhost:" (.port server) "/__admin/mappings/new")
-               {:body (json/generate-string {:request {:method "GET" :url "/hello"}
-                                             :response {:status 200
-                                                        :body "{ \"message\": \"Hello World\" }"
-                                                        :headers {:Content-Type "application/json"}}})})
+                {:body (json/generate-string {:request {:method "GET" :url "/hello"}
+                                              :response {:status 200
+                                                         :body "{ \"message\": \"Hello World\" }"
+                                                         :headers {:Content-Type "application/json"}}})})
     (let [response @(http/get (str "http://localhost:" (.port server) "/hello"))]
-      (is (= {"message" "Hello World"} (json/parse-string (:body response)))))
+      (is (= {"message" "Hello World"} (json/parse-string (:body response))))))
 
-    #_(let [client] (s/client {:hosts [(str "http://localhost:" (.port server))]})
-           (s/request client {:url url
-                              :method method
-                              :body body
-                              :headers {:content-type "application/json"}}))
-
-    (is (= 1 1))))
+  (testing "spandex request"
+    @(http/post (str "http://localhost:" (.port server) "/__admin/mappings/new")
+                {:body (json/generate-string {:request {:method "POST" :url "/blog/user"}
+                                              :response {:status 200
+                                                         :body "{}"
+                                                         :headers {:Content-Type "application/json"}}})})
+    (let [client (s/client {:hosts [(str "http://localhost:" (.port server))]})]
+      (s/request client {:url "/blog/user"
+                         :method :post
+                         :body {:name "hello"}
+                         :headers {:content-type "application/json"}}))
+    (is (not (= nil (json/parse-string (:body
+                                        @(http/post (str "http://localhost:" (.port server) "/__admin/requests/find")
+                                                    {:body (json/generate-string {:method "POST" :url "/blog/user"})}))))))))
