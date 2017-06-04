@@ -8,31 +8,33 @@
   [& args]
   (println "Hello, asdf World!"))
 
-(defn index [name id]
-  (->> {:url "/blog/user"
-        :method :put
-        :body {:_id id
-               :name name}
+(defn req [url method body]
+  (->> {:url url
+        :method method
+        :body body
         :headers {:content-type "application/json"}}
        (s/request (s/client))
-       pprint))
+       :body))
+
+(defn index [name]
+  (pprint (req "/blog/user" :post {:name name})))
 
 (defn count []
-  (->> {:url "/blog/user/_count"
-        :method :post}
-       (s/request (s/client))
-       :body
-       :count))
+  (:count (req "/blog/user/_count" :post nil)))
 
-(doall (map index (take 10 (names)) (range)))
+(defn match-all []
+  (->> {:query {:match_all {}}}
+       (req "/blog/user/_search" :get)
+       :hits
+       :hits
+       (map :_source)
+       pprint))
 
-(->> {:url "/blog/user/_search"
-      :method :get
-      :body {:query {:match_all {}}}
-      :headers {:content-type "application/json"}}
-     (s/request (s/client))
-     :body
-     :hits
-     :hits
-     (map :_source)
-     pprint)
+(comment
+  (doall (map index (take 10 (names))))
+
+  (count)
+
+  (match-all)
+
+  )
