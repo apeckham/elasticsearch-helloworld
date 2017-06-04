@@ -3,12 +3,13 @@
             [clojure
              [test :refer :all]
              [walk :refer [keywordize-keys]]]
+            [es-typeahead.wiremock :as wiremock]
             [org.httpkit.client :as http]
             [qbits.spandex :as s])
   (:import com.github.tomakehurst.wiremock.core.WireMockConfiguration
            com.github.tomakehurst.wiremock.WireMockServer))
 
-(def server (WireMockServer. (.dynamicPort (WireMockConfiguration.))))
+(def server (wiremock/server))
 
 (use-fixtures :once (fn [f]
                       (.start server)
