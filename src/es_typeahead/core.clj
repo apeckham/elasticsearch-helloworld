@@ -80,7 +80,7 @@
                          {:additional "payload2"
                           :suggest {:input name}}])]
 
-           (async/put! input-ch (mapcat action (take 100000 (names))))
+           (async/put! input-ch (mapcat action (take 10000 (names))))
            (async/close! input-ch)
            (loop []
              (when-let [[job response] (async/<!! output-ch)]
