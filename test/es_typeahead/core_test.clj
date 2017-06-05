@@ -10,7 +10,7 @@
 (use-fixtures :once (wiremock/once-fixture server))
 (use-fixtures :each (wiremock/each-fixture server))
 
-(deftest a-test
+(deftest wiremock-spandex-test
   (testing "hello wiremock"
     (wiremock/new-mapping server {:request {:method "GET" :url "/hello"}
                                   :response {:status 200
@@ -22,7 +22,7 @@
                                          :body
                                          json/parse-string))))
 
-  (testing "spandex request"
+  (testing "hello wiremock and spandex"
     (wiremock/new-mapping server {:response {:status 200
                                              :body (json/generate-string {})
                                              :headers {:Content-Type "application/json"}}})
@@ -39,7 +39,6 @@
 
     (is (= ["/blog/user" "/blog/user"] (->> {:method "POST"}
                                             (wiremock/find-requests server)
-                                            :requests
                                             (map :url))))
-    (is (= 2 (:count (wiremock/count-requests server {:method "POST"}))))
-    (is (empty? (:requests (wiremock/unmatched-requests server))))))
+    (is (= 2 (wiremock/count-requests server {:method "POST"})))
+    (is (empty? (wiremock/unmatched-requests server)))))

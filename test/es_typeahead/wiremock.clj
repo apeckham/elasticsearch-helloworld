@@ -14,7 +14,7 @@
   ([server path]
    (str "http://localhost:" (.port server) path)))
 
-(defn admin [server method path body]
+(defn admin-request [server method path body]
   (-> {:method method
        :url (url server (str "/__admin" path))
        :body (json/generate-string body)}
@@ -25,16 +25,16 @@
       keywordize-keys))
 
 (defn new-mapping [server body]
-  (admin server :post "/mappings/new" body))
+  (admin-request server :post "/mappings/new" body))
 
 (defn find-requests [server body]
-  (admin server :post "/requests/find" body))
+  (:requests (admin-request server :post "/requests/find" body)))
 
 (defn unmatched-requests [server]
-  (admin server :post "/requests/unmatched" nil))
+  (:requests (admin-request server :post "/requests/unmatched" nil)))
 
 (defn count-requests [server body]
-  (admin server :post "/requests/count" body))
+  (:count (admin-request server :post "/requests/count" body)))
 
 (defn once-fixture [server]
   (fn [f]
