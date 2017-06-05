@@ -23,9 +23,8 @@
                                          json/parse-string))))
 
   (testing "spandex request"
-    (wiremock/new-mapping server {:request {:method "POST" :url "/blog/user"}
-                                  :response {:status 200
-                                             :body "{}"
+    (wiremock/new-mapping server {:response {:status 200
+                                             :body (json/generate-string {})
                                              :headers {:Content-Type "application/json"}}})
 
     (let [client (s/client {:hosts [(str "http://localhost:" (.port server))]})]
@@ -38,6 +37,9 @@
                          :body {:name "hello"}
                          :headers {:content-type "application/json"}}))
 
-    (is (= ["/blog/user" "/blog/user"] (map :url (:requests (wiremock/find-requests server {:method "POST"})))))
-    (is (= 2 (wiremock/count-requests server {:method "POST"})))
+    (is (= ["/blog/user" "/blog/user"] (->> {:method "POST"}
+                                            (wiremock/find-requests server)
+                                            :requests
+                                            (map :url))))
+    (is (= 2 (:count (wiremock/count-requests server {:method "POST"}))))
     (is (empty? (:requests (wiremock/unmatched-requests server))))))
