@@ -8,9 +8,15 @@
 (defn server []
   (WireMockServer. (.dynamicPort (WireMockConfiguration.))))
 
+(defn url
+  ([server]
+   (url server nil))
+  ([server path]
+   (str "http://localhost:" (.port server) path)))
+
 (defn admin [server method path body]
   (-> {:method method
-       :url (format "http://localhost:%d/__admin%s" (.port server) path)
+       :url (url server (str "/__admin" path))
        :body (json/generate-string body)}
       http/request
       deref

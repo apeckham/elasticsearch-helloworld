@@ -16,7 +16,7 @@
                                   :response {:status 200
                                              :body "{\"message\": \"Hello World\"}"
                                              :headers {:Content-Type "application/json"}}})
-    (is (= {"message" "Hello World"} (-> (format "http://localhost:%d/hello" (.port server))
+    (is (= {"message" "Hello World"} (-> (wiremock/url server "/hello")
                                          http/get
                                          deref
                                          :body
