@@ -20,12 +20,9 @@
                       (.resetAll server)
                       (f)))
 
-(defn admin-url [server path]
-  (format "http://localhost:%d/__admin%s" (.port server) path))
-
 (defn admin-request [server method path body]
   (->> (http/request {:method method
-                      :url (admin-url server path)
+                      :url (format "http://localhost:%d/__admin%s" (.port server) path)
                       :body (json/generate-string body)})
        deref
        :body
