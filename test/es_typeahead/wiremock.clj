@@ -29,3 +29,14 @@
 
 (defn count-requests [server body]
   (:count (admin-request server :post "/requests/count" body)))
+
+(defn once-fixture [server]
+  (fn [f]
+    (.start server)
+    (f)
+    (.stop server)))
+
+(defn each-fixture [server]
+  (fn [f]
+    (.resetAll server)
+    (f)))
