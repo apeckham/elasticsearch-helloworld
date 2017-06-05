@@ -10,15 +10,16 @@
            com.github.tomakehurst.wiremock.WireMockServer))
 
 (def server (wiremock/server))
+(defn wiremock-each-fixture [f]
+  (.resetAll server)
+  (f))
+(defn wiremock-once-fixture [f]
+  (.start server)
+  (f)
+  (.stop server))
 
-(use-fixtures :once (fn [f]
-                      (.start server)
-                      (f)
-                      (.stop server)))
-
-(use-fixtures :each (fn [f]
-                      (.resetAll server)
-                      (f)))
+(use-fixtures :once wiremock-once-fixture)
+(use-fixtures :each wiremock-each-fixture)
 
 (defn admin-request [server method path body]
   (->> (http/request {:method method
