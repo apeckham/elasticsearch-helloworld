@@ -1,15 +1,12 @@
 (ns es-typeahead.core-test
   (:require [cheshire.core :as json]
-            [clojure
-             [test :refer :all]
-             [walk :refer [keywordize-keys]]]
+            [clojure.test :refer :all]
             [es-typeahead.wiremock :as wiremock]
             [org.httpkit.client :as http]
-            [qbits.spandex :as s])
-  (:import com.github.tomakehurst.wiremock.core.WireMockConfiguration
-           com.github.tomakehurst.wiremock.WireMockServer))
+            [qbits.spandex :as s]))
 
 (def server (wiremock/server))
+
 (defn wiremock-each-fixture [f]
   (.resetAll server)
   (f))
@@ -21,31 +18,9 @@
 (use-fixtures :once wiremock-once-fixture)
 (use-fixtures :each wiremock-each-fixture)
 
-(defn admin-request [server method path body]
-  (-> {:method method
-       :url (format "http://localhost:%d/__admin%s" (.port server) path)
-       :body (json/generate-string body)}
-      http/request
-      deref
-      :body
-      json/parse-string
-      keywordize-keys))
-
-(defn new-mapping [server mapping]
-  (admin-request server :post "/mappings/new" mapping))
-
-(defn find-requests [server body]
-  (admin-request server :post "/requests/find" body))
-
-(defn unmatched-requests [server]
-  (admin-request server :get "/requests/unmatched" nil))
-
-(defn count-requests [server body]
-  (:count (admin-request server :post "/requests/count" body)))
-
 (deftest a-test
   (testing "hello wiremock"
-    (new-mapping server {:request {:method "GET" :url "/hello"}
+    (wiremock/new-mapping server {:request {:method "GET" :url "/hello"}
                          :response {:status 200
                                     :body "{\"message\": \"Hello World\"}"
                                     :headers {:Content-Type "application/json"}}})
@@ -53,7 +28,7 @@
       (is (= {"message" "Hello World"} (json/parse-string (:body response))))))
 
   (testing "spandex request"
-    (new-mapping server {:request {:method "POST" :url "/blog/user"}
+    (wiremock/new-mapping server {:request {:method "POST" :url "/blog/user"}
                          :response {:status 200
                                     :body "{}"
                                     :headers {:Content-Type "application/json"}}})
@@ -66,6 +41,6 @@
                          :method :post
                          :body {:name "hello"}
                          :headers {:content-type "application/json"}}))
-    (is (= ["/blog/user" "/blog/user"] (map :url (:requests (find-requests server {:method "POST"})))))
-    (is (= 2 (count-requests server {:method "POST"})))
-    (is (empty? (:requests (unmatched-requests server))))))
+    (is (= ["/blog/user" "/blog/user"] (map :url (:requests (wiremock/find-requests server {:method "POST"})))))
+    (is (= 2 (wiremock/count-requests server {:method "POST"})))
+    (is (empty? (:requests (wiremock/unmatched-requests server))))))
