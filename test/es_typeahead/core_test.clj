@@ -3,7 +3,7 @@
             [clojure.test :refer :all]
             [es-typeahead.wiremock :as wiremock]
             [org.httpkit.client :as http]
-            [qbits.spandex :as s]))
+            [qbits.spandex :as spandex]))
 
 (def server (wiremock/server))
 
@@ -27,15 +27,15 @@
                                              :body (json/generate-string {})
                                              :headers {:Content-Type "application/json"}}})
 
-    (let [client (s/client {:hosts [(str "http://localhost:" (.port server))]})]
-      (s/request client {:url "/blog/user"
-                         :method :post
-                         :body {:name "world"}
-                         :headers {:content-type "application/json"}})
-      (s/request client {:url "/blog/user"
-                         :method :post
-                         :body {:name "hello"}
-                         :headers {:content-type "application/json"}}))
+    (let [client (spandex/client {:hosts [(wiremock/url server)]})]
+      (spandex/request client {:url "/blog/user"
+                               :method :post
+                               :body {:name "world"}
+                               :headers {:content-type "application/json"}})
+      (spandex/request client {:url "/blog/user"
+                               :method :post
+                               :body {:name "hello"}
+                               :headers {:content-type "application/json"}}))
 
     (is (= ["/blog/user" "/blog/user"] (->> {:method "POST"}
                                             (wiremock/find-requests server)
