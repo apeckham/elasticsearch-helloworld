@@ -72,7 +72,16 @@
 
          (req "/music" :delete)
 
-         (req "/music" :put {:mappings
+         (req "/_all" :get)
+
+         (req "/_aliases" :post {:actions [{:remove {:index "_all"
+                                                     :alias "music-alias"}}
+                                           {:add {:index "music"
+                                                  :alias "music-alias"}}]})
+
+         (req "/music*" :get)
+
+         (req "/music2" :put {:mappings
                              {:song
                               {:properties
                                {:suggest {:type "completion"}
@@ -87,7 +96,7 @@
          (:count (req "/music/song/_count" :post nil))
 
          (->> {:query {:match_all {}}}
-              (req "/music/_search" :post)
+              (req "/suggest-199/_search" :post)
               :hits
               :hits
               (map :_source))
@@ -98,7 +107,7 @@
                   {:prefix prefix
                    :completion {:field "suggest"
                                 :size 20}}}}
-                (req "/music/_search" :post)
+                (req "/suggest/_search" :post)
                 :suggest
                 :song-suggest
                 first
