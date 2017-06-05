@@ -22,13 +22,14 @@
 (use-fixtures :each wiremock-each-fixture)
 
 (defn admin-request [server method path body]
-  (->> (http/request {:method method
-                      :url (format "http://localhost:%d/__admin%s" (.port server) path)
-                      :body (json/generate-string body)})
-       deref
-       :body
-       json/parse-string
-       keywordize-keys))
+  (-> {:method method
+       :url (format "http://localhost:%d/__admin%s" (.port server) path)
+       :body (json/generate-string body)}
+      http/request
+      deref
+      :body
+      json/parse-string
+      keywordize-keys))
 
 (defn new-mapping [server mapping]
   (admin-request server :post "/mappings/new" mapping))
